@@ -1,11 +1,16 @@
+import fs, { write } from 'fs';
 import { Manager } from "./lib/Manager.js";
 import { Intern } from "./lib/Intern.js";
 import { Engineer } from "./lib/Engineer.js";
 import inquirer from "inquirer";
+import { writeFile } from "fs";
+import { from } from "rxjs";
+import { CreateHtml } from "./src/GenerateHtml.js"
 
 var teamObj = [];
 
 var employee
+
 
 
 function createManager() {
@@ -17,10 +22,11 @@ function createManager() {
     ]).then((reponse) => {
         employee = new Manager(reponse.name, reponse.id, reponse.mail, reponse.officeNum);
         teamObj.push(employee);
-        console.log(teamObj);
         menu()
     });
 }
+
+
 
 function menu() {
     return inquirer.prompt([
@@ -28,11 +34,17 @@ function menu() {
     ]).then((response) => {
         if (response.menu === "engineer") {
             createEngineer();
-        } else {
+        }
+        if (response.menu === "intern") {
             createIntern()
+        }
+        if (response.menu === "finish") {
+            finishTeam()
         }
     })
 }
+
+
 
 function createEngineer() {
     return inquirer.prompt([
@@ -43,10 +55,11 @@ function createEngineer() {
     ]).then((reponse) => {
         employee = new Engineer(reponse.name, reponse.id, reponse.mail, reponse.github);
         teamObj.push(employee);
-        console.log(teamObj);
         menu()
     });
 }
+
+
 
 function createIntern() {
     return inquirer.prompt([
@@ -57,9 +70,24 @@ function createIntern() {
     ]).then((reponse) => {
         employee = new Intern(reponse.name, reponse.id, reponse.mail, reponse.school);
         teamObj.push(employee);
-        console.log(teamObj);
         menu()
     });
 }
 
+function finishTeam() {
+    var finishHtml = CreateHtml.generateString(teamObj)
+    writeHtml(finishHtml)
+}
+
+function writeHtml(finishHtml) {
+    fs.writeFile('./dist/index.html', finishHtml, err => {
+
+        if (err) {
+            console.log(err);
+            return;
+        } else {
+            console.log('your team profile has been succesfully created!');
+        }
+    })
+}
 createManager()
