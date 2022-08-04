@@ -1,37 +1,41 @@
-import fs, { write } from 'fs';
-import { Manager } from "./lib/Manager.js";
-import { Intern } from "./lib/Intern.js";
-import { Engineer } from "./lib/Engineer.js";
-import inquirer from "inquirer";
-import { writeFile } from "fs";
-import { from } from "rxjs";
-import { CreateHtml } from "./src/GenerateHtml.js"
+const fs = require('fs');
+const Manager = require('./lib/Manager');
+const Intern = require('./lib/Intern');
+const Engineer = require('./lib/Engineer');
+const inquirer = require('inquirer')
+const CreateHtml = require('./src/GenerateHtml')
 
 var teamObj = [];
+var managerObj = [];
+var internsObj = [];
+var engineersObj = [];
 
 var employee
 
 
-
+//ask for the managers name, id, mail and officenumber
 function createManager() {
-    return inquirer.prompt([
+    inquirer.prompt([
         { type: 'input', name: 'name', message: "Manager's name:" },
-        { type: 'input', name: 'id', message: "Manager's id:" },
+        { type: 'number', name: 'id', message: "Manager's id:" },
         { type: 'input', name: 'mail', message: "Manager's mail:" },
-        { type: 'input', name: 'officeNum', message: "Manager's office number:" },
+        { type: 'number', name: 'officeNum', message: "Manager's office number:" },
     ]).then((reponse) => {
-        employee = new Manager(reponse.name, reponse.id, reponse.mail, reponse.officeNum);
-        teamObj.push(employee);
+        const name = capName(reponse.name);
+        managerObj = new Manager(name, reponse.id, reponse.mail, reponse.officeNum);
+        console.log('Manager added succesfully\n');
+        //call function menu to choose an engineer or an intern
         menu()
     });
 }
 
 
-
+//choose engineer, intern or finish your team
 function menu() {
-    return inquirer.prompt([
+    inquirer.prompt([
         { type: 'list', name: 'menu', message: "select employye type or finish your team", choices: ['engineer', 'intern', 'finish'] }
     ]).then((response) => {
+        //validations to choose the function of the choice that was made
         if (response.menu === "engineer") {
             createEngineer();
         }
@@ -45,43 +49,50 @@ function menu() {
 }
 
 
-
+//ask for engineer´s info
 function createEngineer() {
-    return inquirer.prompt([
+    inquirer.prompt([
         { type: 'input', name: 'name', message: "name:" },
-        { type: 'input', name: 'id', message: "id:" },
+        { type: 'number', name: 'id', message: "id:" },
         { type: 'input', name: 'mail', message: "mail:" },
         { type: 'input', name: 'github', message: "github:" },
     ]).then((reponse) => {
-        employee = new Engineer(reponse.name, reponse.id, reponse.mail, reponse.github);
-        teamObj.push(employee);
+        const name = capName(reponse.name);
+        employee = new Engineer(name, reponse.id, reponse.mail, reponse.github);
+        engineersObj.push(employee);
+        console.log('Engineer added succesfully\n')
         menu()
     });
 }
 
 
-
+//ask for intern´s info
 function createIntern() {
-    return inquirer.prompt([
+    inquirer.prompt([
         { type: 'input', name: 'name', message: "name:" },
-        { type: 'input', name: 'id', message: "id:" },
+        { type: 'number', name: 'id', message: "id:" },
         { type: 'input', name: 'mail', message: "mail:" },
         { type: 'input', name: 'school', message: "school:" },
     ]).then((reponse) => {
-        employee = new Intern(reponse.name, reponse.id, reponse.mail, reponse.school);
-        teamObj.push(employee);
+        const name = capName(reponse.name);
+        employee = new Intern(name, reponse.id, reponse.mail, reponse.school);
+        internsObj.push(employee);
+        console.log('Intern added succesfully\n')
         menu()
     });
 }
 
+
+//finish the team 
 function finishTeam() {
-    var finishHtml = CreateHtml.generateString(teamObj)
-    writeHtml(finishHtml)
+    teamObj = [managerObj, ...engineersObj, ...internsObj]
+    var finishHtml = CreateHtml.generateString(teamObj);
+    writeHtml(finishHtml);
 }
 
+//
 function writeHtml(finishHtml) {
     fs.writeFile('./dist/index.html', finishHtml, err => {
-
         if (err) {
             console.log(err);
             return;
@@ -90,4 +101,16 @@ function writeHtml(finishHtml) {
         }
     })
 }
+
+function capName(name) {
+    const nameArr = name.split(' ');
+    const cap = nameArr.map((element) => {
+        arr = element.split('');
+        arr[0] = arr[0].toUpperCase();
+
+        return arr.join('')
+    })
+    return cap.join(' ')
+}
 createManager()
+
